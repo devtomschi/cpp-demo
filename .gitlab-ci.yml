@@ -11,6 +11,10 @@
 # can use versions as well, like gcc:5.2
 # see https://hub.docker.com/_/gcc/
 
+stages:
+  - build
+  - test
+
 image: gcc:latest
 
 build:
@@ -22,7 +26,6 @@ build:
     - cd build
     - cmake ..
     - cmake --build . --config RelWithDebInfo -j4
-
   artifacts:
     when: on_failure
     expire_in: 1 week
@@ -39,7 +42,7 @@ test:
   script:
     - cd build
     - ctest --output-on-failure --verbose -C RelWithDebInfo
-    - cmake --build . --config "$BUILD_TYPE" --target clean
+    - cmake --build . --config RelWithDebInfo --target clean
   artifacts:
     when: on_failure
     expire_in: 1 week
