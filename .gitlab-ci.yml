@@ -17,7 +17,7 @@ stages:
 
 image: gcc:latest
 
-build:
+linux-gcc15-build:
   stage: build
   before_script:
     - apt update && apt -y install cmake
@@ -30,10 +30,10 @@ build:
     when: on_failure
     expire_in: 1 week
     paths:
-      - build/
+      - build/*
 
 
-test:
+linux-gcc15-test:
   stage: test
   script:
     - cd build
@@ -43,4 +43,4 @@ test:
     when: on_failure
     expire_in: 1 week
     paths:
-      - build/
+      - build/*
