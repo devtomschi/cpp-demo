@@ -27,10 +27,9 @@ linux-gcc15-build:
     - cmake ..
     - cmake --build . --config RelWithDebInfo -j4
   artifacts:
-    when: on_failure
-    expire_in: 1 week
+    expire_in: 3 days
     paths:
-      - build/*
+      - build/
 
 
 linux-gcc15-test:
@@ -41,6 +40,6 @@ linux-gcc15-test:
     - cmake --build . --config RelWithDebInfo --target clean
   artifacts:
     when: on_failure
-    expire_in: 1 week
+    expire_in: 3 days
     paths:
-      - build/*
+      - build/
