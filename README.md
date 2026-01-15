@@ -1,4 +1,8 @@
 # cpp-demo
-This project demonstrates C++ features using a set small problems for educational purposes.
-It is based on [CMake](https://cmake.org/) and C++ 17 and is usable with different compilers and platforms.
+This project demonstrates C++ features using a set of (small) problems for educational purposes:
+- [Argument Handling](argument-handling.cpp)
+
+## Requirements
+- [CMake](https://cmake.org/) 3.10+ 
+- C++ compiler supporting [C++ 17](https://en.cppreference.com/w/cpp/17.html)
 
