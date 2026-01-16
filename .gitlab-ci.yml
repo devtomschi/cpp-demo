@@ -12,34 +12,26 @@
 # see https://hub.docker.com/_/gcc/
 
 stages:
-  - build
-  - test
+  - build-and-test
 
 image: gcc:latest
 
-linux-gcc15-build:
-  stage: build
+variables:
+  CI_BUILD_TYPE: "RelWithDebInfo"
+
+
+linux-gcc15-build-and-test:
+  interruptible: true
+  when: manual
+  stage: build-and-test
   before_script:
     - apt update && apt -y install cmake
   script:
     - mkdir build
     - cd build
     - cmake ..
-    - cmake --build . --config RelWithDebInfo -j4
-  artifacts:
-    expire_in: 3 days
-    paths:
-      - build/
-
-
-linux-gcc15-test:
-  stage: test
-  before_script:
-    - apt update && apt -y install cmake
-  script:
-    - cd build
-    - ctest --output-on-failure --verbose -C RelWithDebInfo
-    - cmake --build . --config RelWithDebInfo --target clean
+    - cmake --build . --config $CI_BUILD_TYPE -j4
+    - ctest --output-on-failure --verbose -C $CI_BUILD_TYPE
   artifacts:
     when: on_failure
     expire_in: 3 days
