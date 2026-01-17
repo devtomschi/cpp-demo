@@ -1,7 +1,7 @@
 # cpp-demo
 
 
-![](https://gitlab.com/devtomschi/cpp-demo/badges/main/pipeline.svg)
+![](https://gitlab.com/devtomschi/cpp-demo/badges/main/pipeline.svg?ignore_skipped=true)
 
 
 This project demonstrates C++ features using a set of (small) problems for educational purposes:
