@@ -23,6 +23,6 @@ try
 }
 catch (std::exception &e)
 {
-    std::fprintf(stderr,  "caught exception: '%s', exiting...\n", e.what());
+    std::fprintf(stderr, "caught exception: '%s', exiting...\n", e.what());
     return EXIT_FAILURE;
 }
