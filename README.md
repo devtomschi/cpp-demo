@@ -1,6 +1,13 @@
 # cpp-demo
+
+
+![](https://gitlab.com/devtomschi/cpp-demo/badges/main/pipeline.svg)
+
+
 This project demonstrates C++ features using a set of (small) problems for educational purposes:
 - [Argument Handling](argument-handling.cpp)
+
+
 
 ## Requirements
 - [CMake](https://cmake.org/) 3.10+ 
