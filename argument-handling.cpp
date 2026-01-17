@@ -8,12 +8,11 @@
 #include <exception>
 #include <iostream>
 #include <string_view>
-#include <vector>
 #include <utility>
+#include <vector>
 
 int main(int argc, char *argv[])
-try
-{
+try {
     std::vector<std::string_view> arguments{argv, argv + argc};
     std::cout << "argc: " << arguments.size() << '\n';
     for (const auto &arg : std::as_const(arguments))
@@ -21,8 +20,7 @@ try
 
     return EXIT_SUCCESS;
 }
-catch (std::exception &e)
-{
+catch (std::exception &e) {
     std::fprintf(stderr, "caught exception: '%s', exiting...\n", e.what());
     return EXIT_FAILURE;
 }
