@@ -5,7 +5,7 @@
  * Argument handling is a very common problem addressed by different libraries like
  * [Boost program_options](https://www.boost.org/doc/libs/latest/doc/html/program_options.html).
  * The following program implements a simplified argument handling featuring:
- *  - a set of optional, boolean argument flags
+ *  - a set of boolean options
  *  - positional arguments
  */
 
@@ -23,12 +23,17 @@ try {
     std::vector<std::string_view> arguments{argv, argv + argc};
     std::cout << "argument count: " << arguments.size() << '\n';
 
-    std::set<std::string_view> arguments_flags;
+    std::set<std::string_view> options;
     std::vector<std::string_view> positional_arguments;
 
+    bool now_only_positional = false;
     for (const auto &arg : std::as_const(arguments)) {
-        if (arg[0] == '-')
-            arguments_flags.insert(arg);
+        if (arg == "--") {
+            now_only_positional = true;
+            continue;
+        }
+        if (!now_only_positional && arg[0] == '-')
+            options.insert(arg);
         else
             positional_arguments.push_back(arg);
     }
@@ -36,8 +41,8 @@ try {
     for (const auto &arg : std::as_const(positional_arguments))
         std::cout << "positional argument: " << arg << '\n';
 
-    if (arguments_flags.find("-a") != arguments_flags.end())
-        std::cout << "argument flag: -a " << '\n';
+    if (options.find("-a") != options.end())
+        std::cout << "option: -a " << '\n';
 
     return EXIT_SUCCESS;
 }
