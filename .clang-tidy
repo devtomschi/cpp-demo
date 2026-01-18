@@ -36,4 +36,4 @@ CheckOptions:
   - { key: readability-identifier-naming.GlobalConstantCase,     value: CamelCase }
   - { key: readability-identifier-naming.MemberConstantCase,     value: CamelCase }
   - { key: readability-identifier-naming.StaticConstantCase,     value: CamelCase }
-  - { key: readability-braces-around-statements.ShortStatementLines, value: 2 }
+  - { key: readability-braces-around-statements.ShortStatementLines, value: 3 }
