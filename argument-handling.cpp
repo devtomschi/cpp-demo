@@ -23,7 +23,6 @@ namespace {
 std::tuple<std::vector<std::string_view>, std::set<std::string_view>>
 parseArguments(const std::vector<std::string_view> &arguments)
 {
-
     std::set<std::string_view> options;
     std::vector<std::string_view> positional_arguments;
 
