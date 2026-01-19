@@ -40,11 +40,43 @@ parseArguments(const std::vector<std::string_view> &arguments)
     return {positional_arguments, options};
 }
 
+int runTests()
+{
+    int return_value = EXIT_SUCCESS;
+    // NOLINTNEXTLINE(readability-identifier-naming)
+    auto checkThat = [&return_value](auto expr, int line = __builtin_LINE(), const char *file = __builtin_FILE()) {
+        if (!expr) {
+            return_value = EXIT_FAILURE;
+            std::fprintf(stderr, "%s:%i: check failed!\n", file, line);
+        }
+    };
+    {
+        auto [positionals, options] = parseArguments({"myexe", "1", "2"});
+        checkThat(options.empty());
+        checkThat(positionals.size() == 3);
+    }
+    {
+        auto [positionals, options] = parseArguments({"myexe", "-a", "2"});
+        checkThat(options.find("-a") != options.end());
+        checkThat(positionals.size() == 2);
+    }
+    {
+        auto [positionals, options] = parseArguments({"myexe", "--", "-a", "2"});
+        checkThat(options.empty());
+        checkThat(positionals.size() == 3);
+        checkThat(positionals[1] == "-a");
+    }
+    return return_value;
+}
+
 } // namespace
 
 int main(int argc, char *argv[])
 try {
     const std::vector<std::string_view> arguments{argv, argv + argc};
+
+    if (arguments.size() >= 2 && arguments[1] == "-test")
+        return runTests();
 
     auto [positional_arguments, options] = parseArguments(arguments);
 
