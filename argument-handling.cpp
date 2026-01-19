@@ -15,13 +15,14 @@
 #include <iostream>
 #include <set>
 #include <string_view>
+#include <tuple>
 #include <utility>
 #include <vector>
 
-int main(int argc, char *argv[])
-try {
-    std::vector<std::string_view> arguments{argv, argv + argc};
-    std::cout << "argument count: " << arguments.size() << '\n';
+namespace {
+std::tuple<std::vector<std::string_view>, std::set<std::string_view>>
+parseArguments(const std::vector<std::string_view> &arguments)
+{
 
     std::set<std::string_view> options;
     std::vector<std::string_view> positional_arguments;
@@ -37,7 +38,18 @@ try {
         else
             positional_arguments.push_back(arg);
     }
+    return {positional_arguments, options};
+}
 
+} // namespace
+
+int main(int argc, char *argv[])
+try {
+    const std::vector<std::string_view> arguments{argv, argv + argc};
+
+    auto [positional_arguments, options] = parseArguments(arguments);
+
+    std::cout << "positional argument count: " << positional_arguments.size() << '\n';
     for (const auto &arg : std::as_const(positional_arguments))
         std::cout << "positional argument: " << arg << '\n';
 
