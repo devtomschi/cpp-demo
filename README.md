@@ -2,7 +2,7 @@
 
 
 ![](https://github.com/devtomschi/cpp-demo/actions/workflows/ci-build-and-test.yaml/badge.svg)
-![](https://gitlab.com/devtomschi/cpp-demo/badges/main/pipeline.svg)
+![](https://gitlab.com/devtomschi/cpp-demo/badges/main/pipeline.svg?key_text=GitLab+Ubuntu+GCC&key_width=120)
 
 
 This project demonstrates C++ features using a set of (small) problems for educational purposes:
