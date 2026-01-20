@@ -1,4 +1,4 @@
-name: Build and test on multiple platforms
+name: Ubuntu GCC & Clang, Windows MSVC
 
 on:
   push:

@@ -1,3 +1,6 @@
+workflow:
+  name: GitLab Ubuntu GCC
+  
 stages:
   - build-and-test
 

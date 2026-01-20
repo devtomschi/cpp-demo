@@ -1,8 +1,8 @@
 # cpp-demo
 
 
-![Ubuntu GCC & Clang, Windows MSVC](https://github.com/devtomschi/cpp-demo/actions/workflows/ci-build-and-test.yaml/badge.svg)
-![GitLab Ubuntu GCC](https://gitlab.com/devtomschi/cpp-demo/badges/main/pipeline.svg)
+![](https://github.com/devtomschi/cpp-demo/actions/workflows/ci-build-and-test.yaml/badge.svg)
+![](https://gitlab.com/devtomschi/cpp-demo/badges/main/pipeline.svg)
 
 
 This project demonstrates C++ features using a set of (small) problems for educational purposes:
