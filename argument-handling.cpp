@@ -43,23 +43,23 @@ parseArguments(const std::vector<std::string_view> &arguments)
 }
 
 
-void testsParseArguments()
+void testParseArguments()
 {
     {
         auto [positionals, options] = parseArguments({"myexe", "1", "2"});
-        test(options.empty());
-        test(positionals.size() == 3);
+        checkThat(options.empty());
+        checkThat(positionals.size() == 3);
     }
     {
         auto [positionals, options] = parseArguments({"myexe", "-a", "2"});
-        test(options.find("-a") != options.end());
-        test(positionals.size() == 2);
+        checkThat(options.find("-a") != options.end());
+        checkThat(positionals.size() == 2);
     }
     {
         auto [positionals, options] = parseArguments({"myexe", "--", "-a", "2"});
-        test(options.empty());
-        test(positionals.size() == 3);
-        test(positionals[1] == "-a");
+        checkThat(options.empty());
+        checkThat(positionals.size() == 3);
+        checkThat(positionals[1] == "-a");
     }
 }
 
@@ -67,7 +67,7 @@ void testsParseArguments()
 
 int main(int argc, char *argv[])
 try {
-    test.runIfRequested(argc, argv, testsParseArguments);
+    Tests::runIfRequested(argc, argv, testParseArguments);
 
     const std::vector<std::string_view> arguments{argv, argv + argc};
 
