@@ -20,8 +20,7 @@ class Tests {
     /*!
      * Run given test function if requested on the command line.
      */
-    // NOLINTNEXTLINE(modernize-avoid-c-arrays)
-    template <typename F> static void runIfRequested(int argc, char *argv[], F run_tests)
+    template <typename F> static void runIfRequested(int argc, char **argv, F run_tests)
     {
         using namespace std::string_view_literals;
         if (argc >= 2 && argv[1] == "-test"sv) {
