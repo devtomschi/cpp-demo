@@ -3,10 +3,8 @@
  * C++ 17 argument handling demo program.
  *
  * Argument handling is a very common problem addressed by different libraries like
- * [Boost program_options](https://www.boost.org/doc/libs/latest/doc/html/program_options.html).
- * The following program implements a simplified argument handling featuring:
- *  - a set of boolean options
- *  - positional arguments
+ * [Boost program_options](https://www.boost.org/doc/libs/latest/doc/html/program_options.html) and many others.
+ * This program implements simple argument parsing with a limited feature set.
  */
 
 #include "test.h"
@@ -22,6 +20,13 @@
 #include <vector>
 
 namespace {
+
+/*!
+ * Argument parsing featuring:
+ *  - boolean options (starting with at least a single dash)
+ *  - positional arguments
+ *  - double dash denotes that all subsequents arguments are positional
+ */
 std::tuple<std::vector<std::string_view>, std::set<std::string_view>>
 parseArguments(const std::vector<std::string_view> &arguments)
 {
@@ -41,7 +46,6 @@ parseArguments(const std::vector<std::string_view> &arguments)
     }
     return {positional_arguments, options};
 }
-
 
 void testParseArguments()
 {
