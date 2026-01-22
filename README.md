@@ -11,7 +11,7 @@ This project demonstrates C++ features using a set of (small) problems for educa
 
 
 ## Requirements
-- [CMake](https://cmake.org/) 3.10+ 
+- [CMake](https://cmake.org/) 3.15+ 
 - C++ compiler supporting [C++ 17](https://en.cppreference.com/w/cpp/17.html)
 
 ### Optional Tools
