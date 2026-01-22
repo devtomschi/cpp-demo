@@ -12,6 +12,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <exception>
+#include <initializer_list>
 #include <iostream>
 #include <set>
 #include <string_view>
@@ -27,8 +28,7 @@ namespace {
  *  - positional arguments
  *  - double dash denotes that all subsequents arguments are positional
  */
-std::tuple<std::vector<std::string_view>, std::set<std::string_view>>
-parseArguments(int argc, char **argv)
+std::tuple<std::vector<std::string_view>, std::set<std::string_view>> parseArguments(int argc, char **argv)
 {
     const std::vector<std::string_view> arguments{argv, argv + argc};
     std::set<std::string_view> options;
@@ -50,21 +50,21 @@ parseArguments(int argc, char **argv)
 
 void testParseArguments()
 {
+    auto parse_arguments = [](std::initializer_list<const char *> args) {
+        return parseArguments(static_cast<int>(args.size()), const_cast<char **>(std::data(args)));
+    };
     {
-        std::vector<char*> args{"myexe", "1", "2"};
-        auto [positionals, options] = parseArguments(static_cast<int>(args.size()), args.data());
+        auto [positionals, options] = parse_arguments({"myexe", "1", "2"});
         checkThat(options.empty());
         checkThat(positionals.size() == 3);
     }
     {
-        std::vector<char*> args{"myexe", "-a", "2"};
-        auto [positionals, options] = parseArguments(static_cast<int>(args.size()), args.data());
+        auto [positionals, options] = parse_arguments({"myexe", "-a", "2"});
         checkThat(options.find("-a") != options.end());
         checkThat(positionals.size() == 2);
     }
     {
-        std::vector<char*> args{"myexe", "--", "-a", "2"};
-        auto [positionals, options] = parseArguments(static_cast<int>(args.size()), args.data());
+        auto [positionals, options] = parse_arguments({"myexe", "--", "-a", "2"});
         checkThat(options.empty());
         checkThat(positionals.size() == 3);
         checkThat(positionals[1] == "-a");
