@@ -14,9 +14,8 @@
 #include <exception>
 #include <initializer_list>
 #include <iostream>
-#include <set>
+#include <map>
 #include <string_view>
-#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -28,10 +27,9 @@ namespace {
  *  - positional arguments
  *  - double dash denotes that all subsequents arguments are positional
  */
-std::tuple<std::vector<std::string_view>, std::set<std::string_view>> parseArguments(int argc, char **argv)
+std::vector<std::string_view> parseArguments(int argc, char **argv, std::map<std::string_view, bool> &program_options)
 {
     const std::vector<std::string_view> arguments{argv, argv + argc};
-    std::set<std::string_view> options;
     std::vector<std::string_view> positional_arguments;
 
     bool now_only_positional = false;
@@ -40,32 +38,43 @@ std::tuple<std::vector<std::string_view>, std::set<std::string_view>> parseArgum
             now_only_positional = true;
             continue;
         }
-        if (!now_only_positional && arg[0] == '-')
-            options.insert(arg);
-        else
-            positional_arguments.push_back(arg);
+        if (!now_only_positional && arg[0] == '-') {
+            if (const auto it = program_options.find(arg); it != program_options.end())
+                it->second = true;
+            else
+                ; // silently discard unknown options for now
+        }
+        else {
+            positional_arguments.push_back(arg);            
+        }
     }
-    return {positional_arguments, options};
+    return positional_arguments;
 }
 
 void testParseArguments()
 {
-    auto parse_arguments = [](std::initializer_list<const char *> args) {
-        return parseArguments(static_cast<int>(args.size()), const_cast<char **>(std::data(args)));
+    auto parse_arguments = [](std::initializer_list<const char *> args, std::map<std::string_view, bool> &program_options) {
+        return parseArguments(static_cast<int>(args.size()), const_cast<char **>(std::data(args)), program_options);
     };
     {
-        auto [positionals, options] = parse_arguments({"myexe", "1", "2"});
-        checkThat(options.empty());
+        std::map<std::string_view, bool> program_options{{"-a", false}, {"-b", false}};
+        auto positionals = parse_arguments({"myexe", "1", "2"}, program_options);
+        checkThat(!program_options["-a"]);
+        checkThat(!program_options["-b"]);
         checkThat(positionals.size() == 3);
     }
     {
-        auto [positionals, options] = parse_arguments({"myexe", "-a", "2"});
-        checkThat(options.find("-a") != options.end());
+        std::map<std::string_view, bool> program_options{{"-a", false}, {"-b", false}};
+        auto positionals = parse_arguments({"myexe", "-a", "2"}, program_options);
+        checkThat(program_options["-a"]);
+        checkThat(!program_options["-b"]);
         checkThat(positionals.size() == 2);
     }
     {
-        auto [positionals, options] = parse_arguments({"myexe", "--", "-a", "2"});
-        checkThat(options.empty());
+        std::map<std::string_view, bool> program_options{{"-a", false}, {"-b", false}};
+        auto positionals = parse_arguments({"myexe", "-b", "--", "-a", "2"}, program_options);
+        checkThat(!program_options["-a"]);
+        checkThat(program_options["-b"]);
         checkThat(positionals.size() == 3);
         checkThat(positionals[1] == "-a");
     }
@@ -77,14 +86,15 @@ int main(int argc, char *argv[])
 try {
     Tests::runIfRequested(argc, argv, testParseArguments);
 
-    auto [positional_arguments, options] = parseArguments(argc, argv);
+    std::map<std::string_view, bool> program_options{{"-a", false}, {"-b", false}};
+    auto positional_arguments = parseArguments(argc, argv, program_options);
 
     std::cout << "positional argument count: " << positional_arguments.size() << '\n';
     for (const auto &arg : std::as_const(positional_arguments))
         std::cout << "positional argument: " << arg << '\n';
 
-    if (options.find("-a") != options.end())
-        std::cout << "option: -a " << '\n';
+    std::cout << "option a: " << program_options["-a"] << '\n';
+    std::cout << "option b: " << program_options["-b"] << '\n';
 
     return EXIT_SUCCESS;
 }
