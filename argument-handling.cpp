@@ -19,64 +19,87 @@
 #include <utility>
 #include <vector>
 
-namespace {
-
 /*!
- * Argument parsing featuring:
- *  - boolean options (starting with at least a single dash)
- *  - positional arguments
- *  - double dash denotes that all subsequents arguments are positional
+ * Responsible for argument handling (and storage).
  */
-std::vector<std::string_view> parseArguments(int argc, char **argv, std::map<std::string_view, bool> &program_options)
-{
-    const std::vector<std::string_view> arguments{argv, argv + argc};
-    std::vector<std::string_view> positional_arguments;
+class Arguments {
+  public:
+    Arguments() = default;
+    ~Arguments() = default;
 
-    bool now_only_positional = false;
-    for (const auto &arg : std::as_const(arguments)) {
-        if (arg == "--") {
-            now_only_positional = true;
-            continue;
-        }
-        if (!now_only_positional && arg[0] == '-') {
-            if (const auto it = program_options.find(arg); it != program_options.end())
-                it->second = true;
-            else
-                ; // silently discard unknown options for now
-        }
-        else {
-            positional_arguments.push_back(arg);            
+    Arguments &addOption(std::string_view option_name, bool default_value)
+    {
+        options_[option_name] = default_value;
+        return *this;
+    }
+
+    /*!
+     * Argument parsing featuring:
+     *  - boolean options (starting with at least a single dash)
+     *  - positional arguments
+     *  - double dash denotes that all subsequents arguments are positional
+     */
+    void parse(int argc, char **argv)
+    {
+        const std::vector<std::string_view> arguments{argv, argv + argc};
+
+        bool now_only_positional = false;
+        for (const auto &arg : std::as_const(arguments)) {
+            if (arg == "--") {
+                now_only_positional = true;
+                continue;
+            }
+            if (!now_only_positional && arg[0] == '-') {
+                if (const auto it = options_.find(arg); it != options_.end())
+                    it->second = true;
+                else
+                    ; // silently discard unknown options for now
+            }
+            else {
+                positionals_.push_back(arg);
+            }
         }
     }
-    return positional_arguments;
-}
+
+    bool option(std::string_view option_name) { return options_[option_name]; }
+    const std::vector<std::string_view>& positionals() { return positionals_; }
+
+  private:
+    std::map<std::string_view, bool> options_;
+    std::vector<std::string_view> positionals_;
+};
+
+namespace {
 
 void testParseArguments()
 {
-    auto parse_arguments = [](std::initializer_list<const char *> args, std::map<std::string_view, bool> &program_options) {
-        return parseArguments(static_cast<int>(args.size()), const_cast<char **>(std::data(args)), program_options);
+    auto parse_arguments = [](Arguments &args, std::initializer_list<const char *> cmdline_args) {
+        args.parse(static_cast<int>(cmdline_args.size()), const_cast<char **>(std::data(cmdline_args)));
     };
     {
-        std::map<std::string_view, bool> program_options{{"-a", false}, {"-b", false}};
-        auto positionals = parse_arguments({"myexe", "1", "2"}, program_options);
-        checkThat(!program_options["-a"]);
-        checkThat(!program_options["-b"]);
-        checkThat(positionals.size() == 3);
+        Arguments args;
+        args.addOption("-a", false).addOption("-b", false);
+        parse_arguments(args, {"myexe", "1", "2"});
+        checkThat(!args.option("-a"));
+        checkThat(!args.option("-b"));
+        checkThat(args.positionals().size() == 3);
     }
     {
-        std::map<std::string_view, bool> program_options{{"-a", false}, {"-b", false}};
-        auto positionals = parse_arguments({"myexe", "-a", "2"}, program_options);
-        checkThat(program_options["-a"]);
-        checkThat(!program_options["-b"]);
-        checkThat(positionals.size() == 2);
+        Arguments args;
+        args.addOption("-a", false).addOption("-b", false);
+        parse_arguments(args, {"myexe", "-a", "2"});
+        checkThat(args.option("-a"));
+        checkThat(!args.option("-b"));
+        checkThat(args.positionals().size() == 2);
     }
     {
-        std::map<std::string_view, bool> program_options{{"-a", false}, {"-b", false}};
-        auto positionals = parse_arguments({"myexe", "-b", "--", "-a", "2"}, program_options);
-        checkThat(!program_options["-a"]);
-        checkThat(program_options["-b"]);
-        checkThat(positionals.size() == 3);
-        checkThat(positionals[1] == "-a");
+        Arguments args;
+        args.addOption("-a", false).addOption("-b", false);
+        parse_arguments(args, {"myexe", "-b", "--", "-a", "2"});
+        checkThat(!args.option("-a"));
+        checkThat(args.option("-b"));
+        checkThat(args.positionals().size() == 3);
+        checkThat(args.positionals()[1] == "-a");
     }
 }
 
@@ -86,15 +109,16 @@ int main(int argc, char *argv[])
 try {
     Tests::runIfRequested(argc, argv, testParseArguments);
 
-    std::map<std::string_view, bool> program_options{{"-a", false}, {"-b", false}};
-    auto positional_arguments = parseArguments(argc, argv, program_options);
+    Arguments args;
+    args.addOption("-a", false).addOption("-b", false);
+    args.parse(argc, argv);
 
-    std::cout << "positional argument count: " << positional_arguments.size() << '\n';
-    for (const auto &arg : std::as_const(positional_arguments))
+    std::cout << "positional argument count: " << args.positionals().size() << '\n';
+    for (const auto &arg : std::as_const(args.positionals()))
         std::cout << "positional argument: " << arg << '\n';
 
-    std::cout << "option a: " << program_options["-a"] << '\n';
-    std::cout << "option b: " << program_options["-b"] << '\n';
+    std::cout << "option a: " << args.option("-a") << '\n';
+    std::cout << "option b: " << args.option("-b") << '\n';
 
     return EXIT_SUCCESS;
 }
