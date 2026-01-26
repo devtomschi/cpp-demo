@@ -20,10 +20,20 @@
 #include <vector>
 
 /*!
- * Responsible for argument handling (and storage).
+ * Responsible for argument handling and storage.
+ *
+ * Arguments fall into two categories:
+ * - *Options* start with a dash (e.g. -myopt) and can appear in random order
+ * - *Positionals* are recorded in the order they appear on the command line
+ *
+ * **Design Remarks**
+ * - Option values are stored inside this class. This is a pragmatic approach for solving the problem in the scope of this demo
+ *   program, but is not a general, product-level solution, which might want to store the data somewhere else.
  */
 class Arguments {
   public:
+    using PositionalContainer = std::vector<std::string_view>;
+
     Arguments() = default;
     ~Arguments() = default;
 
@@ -53,7 +63,7 @@ class Arguments {
                 if (const auto it = options_.find(arg); it != options_.end())
                     it->second = true;
                 else
-                    ; // silently discard unknown options for now
+                    ; // FIXME: silently discard unknown options for now
             }
             else {
                 positionals_.push_back(arg);
@@ -61,8 +71,13 @@ class Arguments {
         }
     }
 
-    bool option(std::string_view option_name) { return options_[option_name]; }
-    const std::vector<std::string_view>& positionals() { return positionals_; }
+    /*! Access options by name */
+    bool &operator[](std::string_view option_name) { return options_[option_name]; }
+    /*! Access positionals by index */
+    std::string_view operator[](int index) const { return positionals_[index]; }
+    [[nodiscard]] PositionalContainer::const_iterator begin() const { return positionals_.cbegin(); }
+    [[nodiscard]] PositionalContainer::const_iterator end() const { return positionals_.cend(); }
+    [[nodiscard]] PositionalContainer::size_type size() const { return positionals_.size(); }
 
   private:
     std::map<std::string_view, bool> options_;
@@ -80,26 +95,26 @@ void testParseArguments()
         Arguments args;
         args.addOption("-a", false).addOption("-b", false);
         parse_arguments(args, {"myexe", "1", "2"});
-        checkThat(!args.option("-a"));
-        checkThat(!args.option("-b"));
-        checkThat(args.positionals().size() == 3);
+        checkThat(!args["-a"]);
+        checkThat(!args["-b"]);
+        checkThat(args.size() == 3);
     }
     {
         Arguments args;
         args.addOption("-a", false).addOption("-b", false);
         parse_arguments(args, {"myexe", "-a", "2"});
-        checkThat(args.option("-a"));
-        checkThat(!args.option("-b"));
-        checkThat(args.positionals().size() == 2);
+        checkThat(args["-a"]);
+        checkThat(!args["-b"]);
+        checkThat(args.size() == 2);
     }
     {
         Arguments args;
         args.addOption("-a", false).addOption("-b", false);
         parse_arguments(args, {"myexe", "-b", "--", "-a", "2"});
-        checkThat(!args.option("-a"));
-        checkThat(args.option("-b"));
-        checkThat(args.positionals().size() == 3);
-        checkThat(args.positionals()[1] == "-a");
+        checkThat(!args["-a"]);
+        checkThat(args["-b"]);
+        checkThat(args.size() == 3);
+        checkThat(args[1] == "-a");
     }
 }
 
@@ -113,12 +128,12 @@ try {
     args.addOption("-a", false).addOption("-b", false);
     args.parse(argc, argv);
 
-    std::cout << "positional argument count: " << args.positionals().size() << '\n';
-    for (const auto &arg : std::as_const(args.positionals()))
+    std::cout << "positional argument count: " << args.size() << '\n';
+    for (const auto &arg : args)
         std::cout << "positional argument: " << arg << '\n';
 
-    std::cout << "option a: " << args.option("-a") << '\n';
-    std::cout << "option b: " << args.option("-b") << '\n';
+    std::cout << "option a: " << args["-a"] << '\n';
+    std::cout << "option b: " << args["-b"] << '\n';
 
     return EXIT_SUCCESS;
 }
