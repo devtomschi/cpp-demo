@@ -60,8 +60,23 @@ class Arguments {
                 continue;
             }
             if (!now_only_positional && arg[0] == '-') {
-                if (const auto it = options_.find(arg); it != options_.end())
-                    it->second = true;
+                auto assignment_index = arg.find('=');
+                std::string_view option_name;
+                bool option_value = true;
+                if (assignment_index != std::string_view::npos) {
+                    option_name = arg.substr(0, assignment_index);
+                    const std::string_view value_string = arg.substr(assignment_index + 1);
+                    if (value_string == "true" || value_string == "1")
+                        option_value = true;
+                    else if (value_string == "false" || value_string == "0")
+                        option_value = false;
+                }
+                else {
+                    option_name = arg;
+                }
+
+                if (const auto it = options_.find(option_name); it != options_.end())
+                    it->second = option_value;
                 else
                     ; // FIXME: silently discard unknown options for now
             }
@@ -115,6 +130,15 @@ void testParseArguments()
         checkThat(args["-b"]);
         checkThat(args.size() == 3);
         checkThat(args[1] == "-a");
+    }
+    {
+        Arguments args;
+        args.addOption("-a", true).addOption("-b", true).addOption("-c", false).addOption("-d", false);
+        parse_arguments(args, {"myexe", "-a=0", "-b=false", "-c=1", "-d=true"});
+        checkThat(!args["-a"]);
+        checkThat(!args["-b"]);
+        checkThat(args["-c"]);
+        checkThat(args["-d"]);
     }
 }
 
