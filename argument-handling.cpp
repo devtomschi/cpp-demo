@@ -70,6 +70,8 @@ class Arguments {
                         option_value = true;
                     else if (value_string == "false" || value_string == "0")
                         option_value = false;
+                    else
+                        ; // FIXME: handle unknown options values (#2)
                 }
                 else {
                     option_name = arg;
@@ -78,7 +80,7 @@ class Arguments {
                 if (const auto it = options_.find(option_name); it != options_.end())
                     it->second = option_value;
                 else
-                    ; // FIXME: silently discard unknown options for now
+                    ; // FIXME: handle discard unknown options (#2)
             }
             else {
                 positionals_.push_back(arg);
