@@ -21,3 +21,9 @@ It currently contains the following topics:
 ## Implementation Notes
 Topics are typically implemented in a single file including some automatic tests. This file can then be easily be compiled into
 a single executable or taken as basis for further experimentation.
+
+
+## Road Map
+Planned improvements and additions are currently tracked as [GitLab issues](https://gitlab.com/devtomschi/cpp-demo/-/issues). 
+Ideas regarding interesting problems are collected in the following list:
+- Virtual terminal input/output handling
