@@ -19,6 +19,8 @@
 #include <utility>
 #include <vector>
 
+namespace {
+
 /*!
  * Responsible for argument handling and storage.
  *
@@ -33,6 +35,12 @@
 class Arguments {
   public:
     using PositionalContainer = std::vector<std::string_view>;
+
+    enum class ParseResult : unsigned char {
+        OK,                 //!< Parsing went fine without any errors
+        InvalidOptionValue, //!< Option value is invalid
+        UnknownOption,      //!< Unknown option was found
+    };
 
     Arguments() = default;
     ~Arguments() = default;
@@ -49,12 +57,14 @@ class Arguments {
      *  - positional arguments
      *  - double dash denotes that all subsequents arguments are positional
      */
-    void parse(int argc, char **argv)
+    std::pair<ParseResult, int> parse(int argc, char **argv)
     {
         const std::vector<std::string_view> arguments{argv, argv + argc};
 
+        int arg_index = -1;
         bool now_only_positional = false;
         for (const auto &arg : std::as_const(arguments)) {
+            ++arg_index;
             if (arg == "--") {
                 now_only_positional = true;
                 continue;
@@ -71,7 +81,7 @@ class Arguments {
                     else if (value_string == "false" || value_string == "0")
                         option_value = false;
                     else
-                        ; // FIXME: handle unknown options values (#2)
+                        return {ParseResult::InvalidOptionValue, arg_index};
                 }
                 else {
                     option_name = arg;
@@ -80,12 +90,13 @@ class Arguments {
                 if (const auto it = options_.find(option_name); it != options_.end())
                     it->second = option_value;
                 else
-                    ; // FIXME: handle discard unknown options (#2)
+                    return {ParseResult::UnknownOption, arg_index};
             }
             else {
                 positionals_.push_back(arg);
             }
         }
+        return {ParseResult::OK, -1};
     }
 
     /*! Access options by name */
@@ -101,17 +112,17 @@ class Arguments {
     std::vector<std::string_view> positionals_;
 };
 
-namespace {
-
 void testParseArguments()
 {
     auto parse_arguments = [](Arguments &args, std::initializer_list<const char *> cmdline_args) {
-        args.parse(static_cast<int>(cmdline_args.size()), const_cast<char **>(std::data(cmdline_args)));
+        return args.parse(static_cast<int>(cmdline_args.size()), const_cast<char **>(std::data(cmdline_args)));
     };
     {
         Arguments args;
         args.addOption("-a", false).addOption("-b", false);
-        parse_arguments(args, {"myexe", "1", "2"});
+        const auto [result, index] = parse_arguments(args, {"myexe", "1", "2"});
+        checkThat(result == Arguments::ParseResult::OK);
+        checkThat(index == -1);
         checkThat(!args["-a"]);
         checkThat(!args["-b"]);
         checkThat(args.size() == 3);
@@ -119,7 +130,9 @@ void testParseArguments()
     {
         Arguments args;
         args.addOption("-a", false).addOption("-b", false);
-        parse_arguments(args, {"myexe", "-a", "2"});
+        const auto [result, index] = parse_arguments(args, {"myexe", "-a", "2"});
+        checkThat(result == Arguments::ParseResult::OK);
+        checkThat(index == -1);
         checkThat(args["-a"]);
         checkThat(!args["-b"]);
         checkThat(args.size() == 2);
@@ -127,7 +140,9 @@ void testParseArguments()
     {
         Arguments args;
         args.addOption("-a", false).addOption("-b", false);
-        parse_arguments(args, {"myexe", "-b", "--", "-a", "2"});
+        const auto [result, index] = parse_arguments(args, {"myexe", "-b", "--", "-a", "2"});
+        checkThat(result == Arguments::ParseResult::OK);
+        checkThat(index == -1);
         checkThat(!args["-a"]);
         checkThat(args["-b"]);
         checkThat(args.size() == 3);
@@ -136,11 +151,21 @@ void testParseArguments()
     {
         Arguments args;
         args.addOption("-a", true).addOption("-b", true).addOption("-c", false).addOption("-d", false);
-        parse_arguments(args, {"myexe", "-a=0", "-b=false", "-c=1", "-d=true"});
+        const auto [result, index] = parse_arguments(args, {"myexe", "-a=0", "-b=false", "-c=1", "-d=true"});
+        checkThat(result == Arguments::ParseResult::OK);
+        checkThat(index == -1);
         checkThat(!args["-a"]);
         checkThat(!args["-b"]);
         checkThat(args["-c"]);
         checkThat(args["-d"]);
+    }
+    {
+        Arguments args;
+        args.addOption("-a", true);
+        const auto [result, index] = parse_arguments(args, {"myexe", "-a="});
+        checkThat(result == Arguments::ParseResult::InvalidOptionValue);
+        checkThat(index == 1);
+        checkThat(args["-a"]);
     }
 }
 
@@ -152,7 +177,20 @@ try {
 
     Arguments args;
     args.addOption("-a", false).addOption("-b", false);
-    args.parse(argc, argv);
+    const auto [result, index] = args.parse(argc, argv);
+    if (result != Arguments::ParseResult::OK) {
+        const std::string_view error_string = [] (Arguments::ParseResult error) -> std::string_view {
+            const std::map<Arguments::ParseResult, std::string_view> errors = {
+                {Arguments::ParseResult::InvalidOptionValue, "invalid option value"},
+                {Arguments::ParseResult::UnknownOption, "unkown option"},
+            };
+            if (const auto it = errors.find(error); it != errors.end())
+                return it->second;
+            return "unknown parsing error";
+        }(result);
+        std::cerr << "parsing failed: " << error_string;
+        return EXIT_FAILURE;
+    }
 
     std::cout << "positional argument count: " << args.size() << '\n';
     for (const auto &arg : args)
