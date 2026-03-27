@@ -13,10 +13,10 @@
  * Represents state of tests.
  */
 class Tests {
+  public:
     Tests() = delete;
     ~Tests() = delete;
 
-  public:
     /*!
      * Run given test function if requested on the command line.
      */
@@ -46,6 +46,5 @@ inline bool checkThat(bool expr, int line = __builtin_LINE(), const char *file =
         std::fprintf(stderr, "%s:%i: check failed!\n", file, line);
         return false;
     }
-    else
-        return true;
+    return true;
 }
